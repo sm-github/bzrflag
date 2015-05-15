@@ -37,7 +37,7 @@ class Agent(object):
         self.commands = []
 
     def tick(self, time_diff, shoot=False):
-
+        print 'time_dif', time_diff
         """Some time has passed; decide what to do next."""
         mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
         self.mytanks = mytanks
@@ -49,9 +49,15 @@ class Agent(object):
 
         self.commands = []
         
-        for tank in mytanks:
-            print 'angle', tank.angle
-            self.attack_enemies(tank)
+        if shoot:
+            print 'shooting'
+            for tank in mytanks:
+                self.tanks_shoot(tank)
+        else:
+            print 'go straight' if self.go_straight else 'turn instead'
+            for tank in mytanks:
+                self.testing_tanks(tank)
+            self.go_straight = not self.go_straight
 
         results = self.bzrc.do_commands(self.commands)
         
@@ -62,11 +68,10 @@ class Agent(object):
 
     def testing_tanks(self, tank):
         if self.go_straight:
-            print 'go straight'
             command = Command(tank.index, 1, 0, 0)
         else:
-            print 'turn instead'
             command = Command(tank.index, 0, 0.6, 0)
+        
         self.commands.append(command)
 
     def attack_enemies(self, tank):
@@ -127,8 +132,13 @@ def main():
     # Run the agent
     try:
         while True:
-            agent.tick(time.time() - prev_time)
-            prev_time = time.time()
+            if time.time() > prev_time_shoot + 2:
+                agent.tick(time.time() - prev_time_shoot, True)
+                prev_time_shoot = time.time()
+            if time.time() > prev_time + wait:
+                went_straight = agent.tick(time.time() - prev_time)
+                wait = 3 if went_straight else 8
+                prev_time = time.time()
             
     except KeyboardInterrupt:
         print "Exiting due to keyboard interrupt."
