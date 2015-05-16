@@ -23,6 +23,7 @@
 import sys
 import math
 import time
+import p_fields
 
 from bzrc import BZRC, Command
 
