@@ -3,61 +3,76 @@ import math
 from map import Map, Obstacle, Base
 
 class Pfield:
-
-    #it might not be the same each time.
-    # 2 - blue, 4 - red, 1 - purple, 3 -green
-
-    TARGET = '3'
-    MAP_NAME = '../maps/four_ls.bzw'
-    #MAP_NAME = '../maps/rotated_box_world.bzw'
-    
-    ALPHA = 5
-    BETA = 1
-    REPULSIVE_S = 20
-    TANGENTIAL_S = 20
-    
-    def __init__ (self):
-        '''do something here'''
-        self.map = Map(self.MAP_NAME, self.TARGET)
+     
+    def __init__ (self, myTeam, mapName):
+        '''load in the obstacles and bases'''
+        self.MYTEAM = myTeam
+        self.map = Map(mapName)
         bases, obstacles = self.map.load()
         self.bases = bases
         self.obstacles = obstacles
         
-    def getVector (self, tank):
-        
-        print 'getDirection'
-        #iterate over obstacles and figure out repulsive fields
-        
-        self.repulsive(tank)
-        
-        #figure out tangential fields
-        
-        #combine that with the attractive field
-        
-        
-        return self.attractive(tank)
-        
-    def repulsive (self, tank):
-    
-        for o in self.obstacles:
-            print o
-        
-    def attractive (self, tank):
-        target = self.bases[self.TARGET]
-
+    def getVector (self, tank, target):
+        target = self.bases[target]
         if tank.flag in ['red', 'green', 'blue', 'purple']:
             #change the target
-            print 'got the flag'
+            target = self.bases[self.MYTEAM]
+                
+        attrX, attrY = self.attractive(tank, target)
+        
+        #iterate over obstacles and figure out repulsive fields
+        repX, repY = self.repulsive(tank, target)
+        
+        return math.atan2(attrY + repY, attrX + repX)
+        
+    def repulsive (self, tank, target):
+        
+        REPULSIVE_S = 30
+        TANGENTIAL_S = 50
+        GAMMA = 2
+        BETA = 0.5
+        
+        deltaX = 0
+        deltaY = 0
+    
+        for obst in self.obstacles:
+            d = self.distance(tank, obst)
+            
+            theta = math.atan2(obst.y - tank.y, obst.x - tank.x)
+            
+            #REPULSIVE FIELD
+            if d < REPULSIVE_S + obst.r:
+                deltaX -= BETA * (REPULSIVE_S + obst.r - d) * math.cos(theta)
+                deltaY -= BETA * (REPULSIVE_S + obst.r - d) * math.sin(theta)
+               
+            #TANGENTIAL FIELD
+            if d < TANGENTIAL_S + obst.r:
+                obsX = obst.x - target.x
+                obsY = obst.y - target.y
+                tankX = tank.x - target.x
+                tankY = tank.y - target.y
+                dot = obsX * tankY - obsY * tankX
+                rightAngle = math.pi / 2
+                if dot < 0: rightAngle *= -1
+                deltaX -= GAMMA * (TANGENTIAL_S + obst.r - d) * math.cos(theta + rightAngle)
+                deltaY -= GAMMA * (TANGENTIAL_S + obst.r - d) * math.sin(theta + rightAngle)
+            
+        return (deltaX, deltaY)
+                        
+        
+    def attractive (self, tank, target):
+        ALPHA = 5
             
         d = self.distance(tank, target)
         
-        if d < target.r: return 0
+        if d < target.r: return (0, 0)
+                
+        theta = math.atan2(target.y - tank.y, target.x - tank.x)
+                                  
+        deltaX = ALPHA * math.cos(theta)
+        deltaY = ALPHA * math.sin(theta)
         
-        print target, d
-        
-        targetAngle = math.atan2(target.cx - tank.y,
-                                  target.cy - tank.x)
-        return targetAngle
+        return (deltaX, deltaY)
         
     def distance (self, tank, obj):
-        return math.sqrt( (tank.x - obj.cx)**2 + (tank.y - obj.cy)**2 )
+        return math.sqrt( (tank.x - obj.x)**2 + (tank.y - obj.y)**2 )

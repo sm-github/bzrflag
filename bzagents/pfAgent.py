@@ -10,40 +10,76 @@ from bzrc import BZRC, Command
 class Agent(object):
 
     MYTANK = 0
-    lastError = 0
+    lastError = {}
     KP = 1
     KD = 0
+    
+    # 1 - red, 2 - green, 3 - blue, 4 - purple
+    TARGET = '2'
+    MYTEAM = '1'
+    
+    MAP_NAME = '../maps/four_ls.bzw'
+    #MAP_NAME = '../maps/rotated_box_world.bzw'
 
     def __init__(self, bzrc):
         self.bzrc = bzrc
-        self.pField = Pfield()
+        self.pField = Pfield(self.MYTEAM, self.MAP_NAME)
         self.constants = self.bzrc.get_constants()
-        bzrc.speed(0, 1)
-
+        
+        for i in range(0,10):
+            self.lastError[i] = 0
 
     def tick(self, timeDiff, shoot=False):
 
         mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
         self.mytank = [tank for tank in mytanks if tank.index == self.MYTANK][0]
+        self.enemies = [tank for tank in othertanks if tank.color !=
+                        self.constants['team']]
+                        
+        commands = []
         
-        targetAngle = self.pField.getVector(self.mytank)
-        print targetAngle, self.mytank.angle
-        newAngVel = self.getAngVel(targetAngle, timeDiff)
-        self.bzrc.angvel(0, newAngVel)
-        self.bzrc.shoot(0)
-        
-        print newAngVel
+        for tank in mytanks:
+            if tank.flag in ['red', 'green', 'blue', 'purple'] or tank.index % 2:
+                targetAngle = self.pField.getVector(tank, self.TARGET)
+                newAngVel = self.getAngVel(tank, targetAngle, timeDiff)
+                commands.append(Command(tank.index, 1, newAngVel, 1))
+            else:
+                commands.append(self.attack_enemies(tank))
+            
+        self.bzrc.do_commands(commands)
 
-
-    def getAngVel(self, targetAngle, timeDiff):
-        angError = self.normalizeAngle(targetAngle - self.mytank.angle)
-        deltaError = (angError - self.lastError) / timeDiff
+    def getAngVel(self, tank, targetAngle, timeDiff):
+        angError = self.normalizeAngle(targetAngle - tank.angle)
+        deltaError = (angError - self.lastError[tank.index]) / timeDiff
         angVel = self.KP * angError + self.KD * deltaError
-        self.lastError = angError
+        self.lastError[tank.index] = angError
         
         angVel = 1 if angVel > 1 else -1 if angVel < -1 else angVel
            
         return angVel
+        
+    def attack_enemies(self, tank):
+        """Find the closest enemy and chase it, shooting as you go."""
+        best_enemy = None
+        best_dist = 2 * float(self.constants['worldsize'])
+        for enemy in self.enemies:
+            if enemy.status != 'alive':
+                continue
+            dist = math.sqrt((enemy.x - tank.x)**2 + (enemy.y - tank.y)**2)
+            if dist < best_dist:
+                best_dist = dist
+                best_enemy = enemy
+        if best_enemy is None:
+            return Command(tank.index, 0, 0, False)
+           
+        return self.move_to_position(tank, best_enemy.x, best_enemy.y)
+
+    def move_to_position(self, tank, target_x, target_y):
+        """Set command to move to given coordinates."""
+        target_angle = math.atan2(target_y - tank.y,
+                                  target_x - tank.x)
+        relative_angle = self.normalizeAngle(target_angle - tank.angle)
+        return Command(tank.index, 1, 2 * relative_angle, True)
         
     def normalizeAngle(self, angle):
     
@@ -67,7 +103,7 @@ def main():
 
     # Connect.
     #bzrc = BZRC(host, int(port), debug=True)
-    bzrc = BZRC('128.187.80.142', int(port))
+    bzrc = BZRC('localhost', int(port))
     agent = Agent(bzrc)
     prevTime = time.time()
 

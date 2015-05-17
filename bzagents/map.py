@@ -5,8 +5,7 @@ class Map:
     bases = {}
     obstacles = []
 
-    def __init__ (self, mapName, target):
-        self.target = target
+    def __init__ (self, mapName):
         self.mapName = mapName
         
     def load (self):
@@ -51,21 +50,21 @@ class Map:
             
 class Obstacle:
     
-    def __init__ (self, cx, cy):
-        self.cx = float(cx)
-        self.cy = float(cy)
-        self.r = 30 #this might need to change later
+    def __init__ (self, x, y):
+        self.x = float(x)
+        self.y = float(y)
+        self.r = 35 #this might need to change later
         
     def __repr__ (self):
-        return 'position: ' + str(self.cx) + ',' + str(self.cy)
+        return 'position: ' + str(self.x) + ',' + str(self.y)
 
 class Base:
 
-    def __init__ (self, cx, cy, color):
-        self.cx = float(cx)
-        self.cy = float(cy) 
+    def __init__ (self, x, y, color):
+        self.x = float(x)
+        self.y = float(y) 
         self.color = color
         self.r = 5
         
     def __repr__ (self):
-        return 'color: ' + self.color + '\nposition: ' + str(self.cx) + ',' + str(self.cy)
+        return 'color: ' + self.color + '\nposition: ' + str(self.x) + ',' + str(self.y)
