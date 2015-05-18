@@ -15,11 +15,11 @@ class Agent(object):
     KD = 0
     
     # 1 - red, 2 - green, 3 - blue, 4 - purple
-    TARGET = '2'
-    MYTEAM = '1'
+    TARGET = '3'
+    MYTEAM = '4'
     
-    MAP_NAME = '../maps/four_ls.bzw'
-    #MAP_NAME = '../maps/rotated_box_world.bzw'
+    #MAP_NAME = '../maps/four_ls.bzw'
+    MAP_NAME = '../maps/rotated_box_world.bzw'
 
     def __init__(self, bzrc):
         self.bzrc = bzrc
@@ -105,23 +105,6 @@ def main():
     #bzrc = BZRC(host, int(port), debug=True)
     bzrc = BZRC('localhost', int(port))
     agent = Agent(bzrc)
-    
-    teamMap = { 'red' : '1', 'green' : '2', 'blue' : '3', 'purple' : '4' }
-    target = 'nobody'
-    myteam = 'nobody'
-    while not myteam in teamMap:
-        myteam = raw_input("what team are you [red, blue, green, purple]: ")
-    
-    print 'you are', teamMap[myteam]
-    agent.MYTEAM = teamMap[myteam]
-    
-    while not target in teamMap:
-        target = raw_input("who do you want to attack [red, blue, green, purple]: ")
-        
-    print "attacking", target
-    agent.TARGET = teamMap[target]
-    
-    
     prevTime = time.time()
 
     # Run the agent
