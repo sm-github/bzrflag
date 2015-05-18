@@ -105,6 +105,19 @@ def main():
     #bzrc = BZRC(host, int(port), debug=True)
     bzrc = BZRC('localhost', int(port))
     agent = Agent(bzrc)
+    
+    teamMap = { 'red' : '1', 'green' : '2', 'blue' : '3', 'purple' : '4' }
+    target = 'nobody'
+    myteam = 'nobody'
+    while not myteam in teamMap:
+        myteam = raw_input("what team are you [red, blue, green, purple]: ")
+    while not target in teamMap:
+        target = raw_input("who do you want to attack [red, blue, green, purple]: ")
+        
+    print "attacking", target
+    agent.TARGET = teamMap[target]
+    agent.MYTEAM = teamMap[myteam]
+    
     prevTime = time.time()
 
     # Run the agent

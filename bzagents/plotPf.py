@@ -5,64 +5,81 @@ import numpy as np
 
 from pFields import Pfield
 
-class Answer(object):
-    """BZRC returns an Answer for things like tanks, obstacles, etc.
-
-    You should probably write your own code for this sort of stuff.  We
-    created this class just to keep things short and sweet.
-
-    """
+class Tank(object):
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.flag = 'die'
     pass
     
+def limiter (value):
+    if value < -10:
+        return -10
+    if value > 10:
+        return 10
+    
+    return value
+        
+    
 if __name__ == '__main__':
+    
+    # 1 - red, 2 - green, 3 - blue, 4 - purple
+    TARGET = '1'
+    
+    MAP_NAME = '../maps/four_ls.bzw'
+    #MAP_NAME = '../maps/rotated_box_world.bzw'
 
-	pFields = Pfield()
+    pFields = Pfield('3', MAP_NAME)
 
-	fig = plt.figure()
-	ax = fig.add_subplot(111)
-	 
-	# generate grid
-	x=np.linspace(-2, 2, 32)
-	y=np.linspace(-1.5, 1.5, 24)
-	x, y=np.meshgrid(x, y)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.axis([-400,400,-400,400]) 
+    # generate grid
+    x=np.linspace(-400, 400, 30)
+    y=np.linspace(-400, 400, 30)
+    # x, y=np.meshgrid(x, y)
 
+    base =  pFields.bases[TARGET]
+    
+    '''
 
-	# calculate vector field
-
-	print len(x[0])
-
-
-	vx = []
-	vy = []
-
-	for i in range(0, len(x)):
-		rowX = []
-		rowY = []
-		for j in range(0, len(x[i])):
-			tank = Answer()
-			tank.x = x[i][j]
-			tank.y = y[i][j]
-			newX, newY = pFields.attractive(tank, pFields.bases['1'])
-			rowX.append(newX)
-			rowY.append(rowY)
-		vx.append(rowX)
-		vy.append(rowY)
-		
-	vx = np.array(vx)
-	vy = np.array(vy)
+    # plot attractive field
+    for r in range(0, len(x)):
+        for c in range(0, len(y)):
+            tank = Tank(x[r], y[c])
+            newX, newY = pFields.attractive(tank, base)
+            ax.arrow(x[r], y[c], limiter(newX), limiter(newY), head_width=4, head_length=6)
 
 	'''
-	vx= y/np.sqrt(x**2+y**2)*np.exp(-(x**2+y**2))
-	vy= x/np.sqrt(x**2+y**2)*np.exp(-(x**2+y**2))
-	
+    
+    circ = plt.Circle((base.x, base.y), base.r, fc='r')
+    plt.gca().add_patch(circ)
 
+
+    #plot repulsive or tangential field
+    for r in range(0, len(x)):
+        for c in range(0, len(y)):
+            tank = Tank(x[r], y[c])
+            #newX, newY = pFields.attractive(tank, base)
+            newX, newY = pFields.repulsive(tank, base)
+            ax.arrow(x[r], y[c], limiter(newX), limiter(newY), head_width=4, head_length=6)
+
+
+    for o in pFields.obstacles:
+        plt.gca().add_patch(plt.Circle((o.x, o.y), o.r, fc='g'))
+        
 	'''
-
-	# plot vector field
-	ax.quiver(x, y, vx, vy, pivot='middle', color='r', headwidth=4, headlength=6)
-	ax.set_xlabel('x')
-	ax.set_ylabel('y')
-	plt.show()
-	#plt.savefig('visualization_quiver_demo.png')
+    #plot the combined fields
+    for r in range(0, len(x)):
+        for c in range(0, len(y)):
+            tank = Tank(x[r], y[c])
+            newX, newY = pFields.attractive(tank, base)
+            repX, repY = pFields.repulsive(tank, base)
+            ax.arrow(x[r], y[c], limiter(newX+ repX), limiter(newY + repY), head_width=4, head_length=6)
+	'''
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    plt.show()
+    plt.savefig('./plots/attrField.png')
 
 

@@ -17,20 +17,21 @@ class Pfield:
         if tank.flag in ['red', 'green', 'blue', 'purple']:
             #change the target
             target = self.bases[self.MYTEAM]
-                
+        
+        #attractive field        
         attrX, attrY = self.attractive(tank, target)
         
-        #iterate over obstacles and figure out repulsive fields
+        #repulsive fields
         repX, repY = self.repulsive(tank, target)
         
         return math.atan2(attrY + repY, attrX + repX)
-        
+          
     def repulsive (self, tank, target):
         
         REPULSIVE_S = 30
         TANGENTIAL_S = 50
-        GAMMA = 2
-        BETA = 0.5
+        GAMMA = 1
+        BETA = 1
         
         deltaX = 0
         deltaY = 0
@@ -39,14 +40,14 @@ class Pfield:
             d = self.distance(tank, obst)
             
             theta = math.atan2(obst.y - tank.y, obst.x - tank.x)
-            
+
             #REPULSIVE FIELD
-            if d < REPULSIVE_S + obst.r:
+            if obst.r < d and d < (REPULSIVE_S + obst.r):
                 deltaX -= BETA * (REPULSIVE_S + obst.r - d) * math.cos(theta)
                 deltaY -= BETA * (REPULSIVE_S + obst.r - d) * math.sin(theta)
-               
+            
             #TANGENTIAL FIELD
-            if d < TANGENTIAL_S + obst.r:
+            if obst.r < d and d < (TANGENTIAL_S + obst.r):
                 obsX = obst.x - target.x
                 obsY = obst.y - target.y
                 tankX = tank.x - target.x
