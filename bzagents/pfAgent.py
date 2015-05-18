@@ -111,12 +111,16 @@ def main():
     myteam = 'nobody'
     while not myteam in teamMap:
         myteam = raw_input("what team are you [red, blue, green, purple]: ")
+    
+    print 'you are', teamMap[myteam]
+    agent.MYTEAM = teamMap[myteam]
+    
     while not target in teamMap:
         target = raw_input("who do you want to attack [red, blue, green, purple]: ")
         
     print "attacking", target
     agent.TARGET = teamMap[target]
-    agent.MYTEAM = teamMap[myteam]
+    
     
     prevTime = time.time()
 
