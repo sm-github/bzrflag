@@ -16,6 +16,7 @@ class Agent(object):
     # 1 - red, 2 - green, 3 - blue, 4 - purple
     TARGET = '3'
     MYTEAM = '4'
+    targetX = -400
 
     #MAP_NAME = '../maps/four_ls.bzw'
     MAP_NAME = '../maps/rotated_box_world.bzw'
@@ -33,8 +34,16 @@ class Agent(object):
 
         commands = []
 
+        threshold = 300
+
+        targetX = self.targetX
+
         for tank in mytanks:
-            commands.append(self.move_to_position(tank, 0, -400))
+
+            if (tank.x > threshold and targetX > 0) or (tank.x < -threshold and targetX < 0):
+                self.targetX = -targetX
+            commands.append(self.move_to_position(tank, self.targetX, 0))
+
 
         self.bzrc.do_commands(commands)
 
@@ -87,7 +96,7 @@ def main():
 
     # Connect.
     #bzrc = BZRC(host, int(port), debug=True)
-    bzrc = BZRC('localhost', int(port))
+    bzrc = BZRC('192.168.2.150', int(port))
     agent = Agent(bzrc)
     prevTime = time.time()
 
